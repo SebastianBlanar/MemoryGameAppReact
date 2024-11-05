@@ -1,40 +1,56 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Card } from "./Card";
 
 export function CardList() {
-    const animalArray = [
-        {name : 'seal', image : 'https://virginia-aquarium.transforms.svdcdn.com/production/Images/Experience/Cards/RUDDER_HARBOR_SEAL-2100x1400-f0e30a62-3c71-4d7e-86f2-a675d4d87418.jpg?w=2073&h=1164&auto=compress%2Cformat&fit=crop&dm=1728059988&s=538a8bc2aa2182fefc09e497f72de65d'},
-        {name : 'meerkat', image : 'https://site-547756.mozfiles.com/files/547756/medium/Meerkat.jpg'},
-        {name : 'shark', image : 'https://d1jyxxz9imt9yb.cloudfront.net/animal/219/meta_image/regular/AdobeStock_96520936_541522_reduced.jpg'},
-        {name : 'snake', image : 'https://cdn.mos.cms.futurecdn.net/7grkegytV4qrcMb9zSQT8V.jpg'},
-        {name : 'squirrel', image : 'https://i.abcnewsfe.com/a/c5cc166f-84f5-414d-9c80-e5a00e9661a3/wirestory_e6318ee7e74492465bb6b0fc22f085ad_16x9.jpg?w=1600'},
-        {name : 'tiger', image : 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Siberischer_tiger_de_edit02.jpg/1280px-Siberischer_tiger_de_edit02.jpg'},
-        {name : 'racoon', image : 'https://images.saymedia-content.com/.image/ar_16:9%2Cc_fill%2Ccs_srgb%2Cq_auto:eco%2Cw_1200/MTk3MTk5NTI4Mzk3MzgyOTc1/raccoons8.png'},
-        {name : 'wolf', image : 'https://hiddensignificance.com/wp-content/uploads/2024/09/spiritual-meaning-of-wolf-howling-2.webp'},
-        {name : 'fox', image : 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8M3x8fGVufDB8fHx8fA%3D%3D'},
-        {name : 'seal', image : 'https://virginia-aquarium.transforms.svdcdn.com/production/Images/Experience/Cards/RUDDER_HARBOR_SEAL-2100x1400-f0e30a62-3c71-4d7e-86f2-a675d4d87418.jpg?w=2073&h=1164&auto=compress%2Cformat&fit=crop&dm=1728059988&s=538a8bc2aa2182fefc09e497f72de65d'},
-        {name : 'shark', image : 'https://d1jyxxz9imt9yb.cloudfront.net/animal/219/meta_image/regular/AdobeStock_96520936_541522_reduced.jpg'},
-        {name : 'snake', image : 'https://cdn.mos.cms.futurecdn.net/7grkegytV4qrcMb9zSQT8V.jpg'},
-        {name : 'squirrel', image : 'https://i.abcnewsfe.com/a/c5cc166f-84f5-414d-9c80-e5a00e9661a3/wirestory_e6318ee7e74492465bb6b0fc22f085ad_16x9.jpg?w=1600'},
-        {name : 'tiger', image : 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Siberischer_tiger_de_edit02.jpg/1280px-Siberischer_tiger_de_edit02.jpg'},
-        {name : 'wolf', image : 'https://hiddensignificance.com/wp-content/uploads/2024/09/spiritual-meaning-of-wolf-howling-2.webp'},
-        {name : 'racoon', image : 'https://images.saymedia-content.com/.image/ar_16:9%2Cc_fill%2Ccs_srgb%2Cq_auto:eco%2Cw_1200/MTk3MTk5NTI4Mzk3MzgyOTc1/raccoons8.png'},
-        {name : 'meerkat', image : 'https://site-547756.mozfiles.com/files/547756/medium/Meerkat.jpg'},
-        {name : 'fox', image : 'https://images.unsplash.com/photo-1474511320723-9a56873867b5?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8M3x8fGVufDB8fHx8fA%3D%3D'},
-    ];
-
+    const [animalsArray,setAnimalsArray] = useState([])
+    const [reset,setReset] = useState(false)
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    
+    function shuffleArray(array) {
+        const shuffledArray = [...array]; 
+        for (let i = shuffledArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
+        }
+        return shuffledArray; 
+    }
+    
     const STATUS = {
         hidden: "hidden",
         shown: "shown",
         revealed: "revealed"
     };
 
-    const [cardGrid, setCardGrid] = useState(
-        animalArray.map((animal) => ({
+    useEffect(() => {
+        const fetchImages = async () => {
+            try {
+                const response = await fetch(`https://api.unsplash.com/photos/random?count=12&client_id=${API_KEY}&query=animal`);
+                const data = await response.json();
+                const duplicatedImages = [...data,...data]
+                
+                const imagesArray = duplicatedImages.map(image => ({
+                    name: image.alt_description || "Animal",
+                    image: image.urls.full 
+                }));
+                
+                setAnimalsArray(shuffleArray(imagesArray));
+            } catch (error) {
+                console.error("Error fetching images:", error);
+            }
+        };
+
+        fetchImages();
+    }, [reset]);
+
+    useEffect(()=>{
+        if (animalsArray.length == 0) return
+        setCardGrid( animalsArray.map((animal) => ({
             name: animal.name,
             status: STATUS.hidden
-        }))
-    );
+        }))) 
+    },[animalsArray])
+
+    const [cardGrid, setCardGrid] = useState([]);
 
     const checkMatch = (grid, index) => {
         const shownCard = grid.find((card, i) => card.status === STATUS.shown && i !== index);
@@ -56,27 +72,40 @@ export function CardList() {
             if (matchIndex !== null) {
                 newGrid[index].status = STATUS.revealed;
                 newGrid[matchIndex].status = STATUS.revealed;
+                setCardGrid(newGrid);
             } else {
-                newGrid.forEach((card, i) => {
-                    if (card.status === STATUS.shown) newGrid[i] = { ...card, status: STATUS.hidden };
-                });
+                setCardGrid(newGrid);
+                setTimeout(() => {
+                    setCardGrid(prevGrid => 
+                        prevGrid.map((card) => 
+                            card.status === STATUS.shown ? { ...card, status: STATUS.hidden } : card
+                        )
+                    );
+                }, 1000);
             }
-            setCardGrid(newGrid);
+            
         }
     };
+
+    const resetGame = () => {
+        setReset(!reset)
+    }
 
     return (
         <section>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-10 mt-10">
                 {cardGrid.map((animal, index) => (
                     <Card
-                        animal={{ ...animal, image: animalArray[index].image }}
+                        animal={{ ...animal, image: animalsArray[index].image }}
                         cardStatus={animal.status}
                         key={index}
                         index={index}
                         updateGrid={() => updateGrid(animal, index)}
                     />
                 ))}
+            </div>
+            <div className="flex justify-center items-center">
+                <button className="mt-10 text-white text-center" onClick={resetGame}>Reset game</button>
             </div>
         </section>
     );
